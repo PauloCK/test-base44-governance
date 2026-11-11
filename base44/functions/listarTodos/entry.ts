@@ -7,6 +7,7 @@ Deno.serve(async (req) => {
   const comoUsuario = await base44.entities.TesteRLS.list().catch((e) => ({ erro: String(e) }));
   const comoServico = await base44.asServiceRole.entities.TesteRLS.list().catch((e) => ({ erro: String(e) }));
   return Response.json({
+    versao: 'branch teste-service-role',
     usuario: user ? user.email : null,
     lidos_como_usuario: Array.isArray(comoUsuario) ? comoUsuario.length : comoUsuario,
     lidos_como_service_role: Array.isArray(comoServico) ? comoServico.map((r) => r.titulo) : comoServico
