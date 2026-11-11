@@ -33,9 +33,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "created_by": "teste-github@exemplo.invalid"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
