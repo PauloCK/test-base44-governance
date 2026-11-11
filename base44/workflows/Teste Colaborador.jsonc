@@ -1,0 +1,37 @@
+{
+  "name": "Teste Colaborador",
+  "description": "Workflow inofensivo para testar o que um colaborador consegue fazer com workflows existentes.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 3 1 1 *",
+      "one_time_date": null,
+      "timezone": "America/Sao_Paulo",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "namespace": "base44",
+      "name": "teste-colaborador",
+      "version": "1.0.0"
+    },
+    "do": [
+      {
+        "espera": {
+          "wait": { "seconds": 1 },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}
