@@ -25,7 +25,14 @@
       "created_by": "{{user.email}}"
     },
     "read": {
-      "data.leitor_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.leitor_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     },
     "update": {
       "created_by": "{{user.email}}"
