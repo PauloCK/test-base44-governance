@@ -1,0 +1,39 @@
+{
+  "name": "Teste Sync",
+  "description": "Teste: workflow gerenciado pelo git, criado pela API com conte\u00fado id\u00eantico.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 3 1 1 *",
+      "one_time_date": null,
+      "timezone": "America/Sao_Paulo",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "do": [
+      {
+        "espera": {
+          "then": "end",
+          "wait": {
+            "seconds": 1
+          }
+        }
+      }
+    ],
+    "document": {
+      "dsl": "1.0.0",
+      "name": "teste-sync",
+      "namespace": "base44",
+      "version": "1.0.0"
+    }
+  }
+}
