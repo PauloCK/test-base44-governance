@@ -196,7 +196,9 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | GitHub + proteção da main impedem um colaborador de mudar código e RLS? | Nos caminhos testados, sim (21 a 26, 29 a 33). O colaborador não consegue desligar nenhuma das duas proteções. |
 | O que continua fora do controle do GitHub? | Secrets (35), publicação de versão antiga do front (36), apagar branches não privadas (37), desligar o sync (34), ler, editar e apagar qualquer dado pela aba Data (59 a 61), disparar workflow existente (64). Workflows e conectores ficam travados pela proteção da main (62, 63, 65). |
 | O fluxo por PR funciona? | Sim, quando Base44 e repo estão em sincronia: RLS e funções entram sozinhos, sem Publish (45 a 48). |
-| O fluxo por PR é utilizável no dia a dia? | É frágil. Um único "Merge" barrado no Base44 trava o sync (50 e 51). A recuperação é trabalhosa, exige o owner e, se feita sem cuidado, coloca em produção o código barrado (52). Na prática, quem tem acesso de editor precisa ser treinado para nunca clicar "Merge" no Base44. Não há como desligar esse botão. |
+| A RLS protege os dados contra colaboradores? | Não, nem uma RLS que proíbe todo mundo (69 e 70). Um workflow de evento registra o que mudou, mas não quem mudou (71). |
+| Workflows podem ser gerenciados pelo git? | Sim, com um Action que chama a API (74 a 77), desde que o arquivo esteja no formato exato do Base44 (78). |
+| O fluxo por PR é utilizável no dia a dia? | É frágil. Um único "Merge" barrado no Base44 trava o sync (50 e 51), e qualquer mudança que o owner fizer direto no Base44 com a main desprotegida também (72 e 73). A recuperação é trabalhosa, exige o owner e, se feita sem cuidado, coloca em produção o código barrado (52). Na prática, quem tem acesso de editor precisa ser treinado para nunca clicar "Merge" no Base44. Não há como desligar esse botão. |
 | Branch privada resolve o "apagar branch alheia"? | Dentro do Base44, sim (54 a 56). No GitHub, ela continua visível (57). |
 
 ## Pendências
@@ -211,4 +213,4 @@ Fora do alcance deste ambiente: o comportamento de "Workspace admin" (só nos pl
 
 ## Estado do app ao final
 
-RLS da `TesteRLS` igual à original. Registros iguais aos originais. Função `ping` com `versao: 'pr-limpo'` (vinda do PR #3). Secret com o valor fictício original. Workflow de teste arquivado. Proteção da main ligada, sync automático ligado, Base44 e repo em sincronia. Ficaram abertas no Base44 as branches `destravar-sync`, `reincidencia` (não mergeada) e `privada-owner`. O arquivo `base44/workflows/Teste Colaborador.jsonc` ficou no repo sem efeito (teste 66).
+RLS da `TesteRLS` igual à original. Registros iguais aos originais. Função `ping` com `versao: 'pr-limpo'` (vinda do PR #3). Secret com o valor fictício original. Todos os workflows de teste arquivados, nenhum arquivo de workflow no repo. Ficaram a entidade `AuditoriaLog` e a função `auditarMudanca` (teste 71). Proteção da main ligada, sync automático ligado, Base44 e repo em sincronia. Ficaram abertas no Base44 as branches `destravar-sync`, `reincidencia` (não mergeada) e `privada-owner`.
