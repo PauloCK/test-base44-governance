@@ -1,0 +1,33 @@
+{
+  "name": "AuditoriaLog",
+  "properties": {
+    "evento": {
+      "description": "Payload recebido do workflow de auditoria.",
+      "type": "string"
+    },
+    "chamador": {
+      "description": "Usuário que executou a função, se houver.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "evento"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "ninguem@exemplo.invalid"
+    },
+    "delete": {
+      "created_by": "ninguem@exemplo.invalid"
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "created_by": "ninguem@exemplo.invalid"
+    }
+  },
+  "type": "object"
+}
