@@ -174,7 +174,7 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | 63 | Pausar/ativar, editar ou arquivar workflow existente | Bloqueado pela proteção da main |
 | 64 | Rodar um workflow existente na hora ("run now") | **Passou.** Não muda o workflow, mas dispara a lógica dele fora do horário (na Mandaguari, por exemplo, gravar no Gestão). |
 | 65 | Conectar, desconectar ou remover conector | Bloqueado pela proteção da main. A recusa vem antes de qualquer outra checagem, inclusive para conector que nem existe. |
-| 66 | Workflow criado por PR (arquivo em `base44/workflows/`, mesmo formato dos da Mandaguari) | **Não é criado**, nem depois do pull nem com Publish. Workflow criado pela API também não gera arquivo no repo. Workflows ficam fora do git: só o owner muda, desligando a proteção da main por um momento. |
+| 66 | Workflow criado por PR (arquivo em `base44/workflows/`, mesmo formato dos da Mandaguari) | **Não é criado**, nem depois do pull nem com Publish. (Correção: workflow criado pela API **gera** arquivo e commit no git local do Base44; o push é que é recusado pelo ruleset. Ver testes 72 a 78.) |
 
 ### 2.11 Publicação e autoria do que vem do GitHub
 
@@ -184,6 +184,28 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | 68 | Autoria do checkpoint criado pelo sync | Sempre a conta que conectou o GitHub (o owner), seja quem for que fez o merge do PR. O histórico do Base44 não mostra quem aprovou; isso fica só no GitHub. |
 
 **Conclusão:** com GitHub + proteção da main, o colaborador não mexe em workflows nem em conectores. Mas lê, edita e apaga qualquer dado pela aba Data, passando por cima da RLS, e consegue disparar workflows existentes.
+
+### 2.12 Dados: a RLS segura a aba Data se ninguém puder editar?
+
+| # | Teste | Resultado |
+|---|---|---|
+| 69 | RLS da `TesteRLS` com update e delete permitidos só para um email inexistente (via PR #9) | Entrou em produção |
+| 70 | Colaborador edita um registro pela aba Data | **Passou.** A aba Data ignora a RLS por completo, mesmo uma que proíbe todo mundo. O conector MCP do owner também editou. RLS não é controle contra quem é colaborador. |
+| 71 | Workflow com gatilho de evento na entidade (update e delete) | Dispara com edições feitas pela aba Data. O payload traz o registro antes, o registro depois e os campos alterados. **Não traz quem fez a mudança.** A função chamada pelo workflow roda como o owner. |
+
+### 2.13 Workflows gerenciados pelo git (o que um GitHub Action faria)
+
+| # | Teste | Resultado |
+|---|---|---|
+| 72 | Owner cria workflow pela API com a main desprotegida | O Base44 grava `base44/workflows/<nome>.jsonc` e faz commit local. O push é recusado e o sync trava (precisou da recuperação 3). |
+| 73 | Owner arquiva workflow pela API | Também gera commit local e trava o sync (recuperação 4) |
+| 74 | Arquivo do workflow entra antes por PR, no formato exato que o Base44 grava; depois o workflow é criado pela API com conteúdo idêntico | **Sem commit local, sync intacto** |
+| 75 | PR altera o arquivo (cron) e o Base44 puxa | O workflow em produção **não muda**. O arquivo é ignorado na criação e na alteração. |
+| 76 | Depois do teste 75, a alteração é aplicada pela API com conteúdo idêntico ao do repo | Aplicou, **sem commit local** |
+| 77 | PR apaga o arquivo do workflow | O pull **arquiva o workflow sozinho**, sem chamada à API e sem travar o sync |
+| 78 | Formato que o Base44 grava | JSON com 2 espaços, sem quebra de linha no final, acentos como `\uXXXX`, `definition` com chaves em ordem alfabética e `trigger.config` na ordem do próprio Base44 (difere por tipo de gatilho). Se o arquivo do PR não bater byte a byte, a chamada à API gera commit local e trava o sync. |
+
+**Conclusão:** um Action consegue manter os workflows a partir do git. Criação e alteração precisam do Action chamando a API com o token do owner e desligando a proteção da main por alguns segundos. Remoção acontece sozinha. O arquivo precisa estar no formato exato do Base44, e o Action deve checar o sync no fim para detectar travas.
 
 ## Resumo
 
