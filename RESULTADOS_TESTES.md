@@ -140,7 +140,7 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | 46 | O Base44 puxa sozinho | **Sim.** Em menos de 1 minuto, pelo webhook, sem chamada manual. Na hora a única aba aberta do Base44 era a página inicial do segundo usuário, não o editor do app. Não sei se isso conta como "app aberto no editor". |
 | 47 | A RLS do PR vale em produção sem Publish | **Sim** |
 | 48 | A função do PR é republicada sem Publish | **Sim**, com um novo deployment |
-| 49 | Front | Não verificado. Pela documentação, o front só vai ao ar com Publish. |
+| 49 | Front | Fica pendente de Publish. Os checkpoints criados pelo sync do GitHub aparecem como "não publicados" até alguém publicar (ver teste 67). |
 
 ### 2.8 Reincidência: um merge barrado volta a travar?
 
@@ -161,7 +161,29 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | 55 | Colaborador busca a branch privada pelo id | 404 |
 | 56 | Colaborador tenta apagar a branch privada pelo id | 404, não apagou |
 | 57 | A branch privada no GitHub | Aparece normalmente como `b44/<id>` para quem tem acesso ao repo (e para qualquer pessoa, enquanto o repo for público). "Privada" vale só dentro do Base44. |
-| 58 | Ruleset protegendo `b44/*` contra deleção | Não verificado. A sessão do Claude não tem permissão de criar rulesets. |
+| 58 | Ruleset protegendo `b44/*` contra deleção | Depende do dono do repo: a sessão do Claude não tem permissão de criar rulesets. |
+
+### 2.10 Dados, workflows e conectores (colaborador, com GitHub + proteção da main)
+
+| # | Teste | Resultado |
+|---|---|---|
+| 59 | Ver todos os registros na aba Data, inclusive os sigilosos | **Passou** (igual ao teste 6) |
+| 60 | Editar pela aba Data um registro criado pelo owner (a RLS de update só deixa o criador) | **Passou.** A aba Data ignora a RLS também na escrita. Revertido. |
+| 61 | Apagar pela aba Data um registro criado pelo owner | **Passou.** Foi para a lixeira e foi restaurado pelo owner. |
+| 62 | Criar workflow | Bloqueado pela proteção da main |
+| 63 | Pausar/ativar, editar ou arquivar workflow existente | Bloqueado pela proteção da main |
+| 64 | Rodar um workflow existente na hora ("run now") | **Passou.** Não muda o workflow, mas dispara a lógica dele fora do horário (na Mandaguari, por exemplo, gravar no Gestão). |
+| 65 | Conectar, desconectar ou remover conector | Bloqueado pela proteção da main. A recusa vem antes de qualquer outra checagem, inclusive para conector que nem existe. |
+| 66 | Workflow criado por PR (arquivo em `base44/workflows/`, mesmo formato dos da Mandaguari) | **Não é criado**, nem depois do pull nem com Publish. Workflow criado pela API também não gera arquivo no repo. Workflows ficam fora do git: só o owner muda, desligando a proteção da main por um momento. |
+
+### 2.11 Publicação e autoria do que vem do GitHub
+
+| # | Teste | Resultado |
+|---|---|---|
+| 67 | O front de um PR vai ao ar sozinho? | **Não.** Os checkpoints criados pelo sync (PRs #2, #3, #5 e #6) ficaram com "last_deployed_at" vazio. Só o do PR #7 foi publicado, quando o owner chamou o Publish. |
+| 68 | Autoria do checkpoint criado pelo sync | Sempre a conta que conectou o GitHub (o owner), seja quem for que fez o merge do PR. O histórico do Base44 não mostra quem aprovou; isso fica só no GitHub. |
+
+**Conclusão:** com GitHub + proteção da main, o colaborador não mexe em workflows nem em conectores. Mas lê, edita e apaga qualquer dado pela aba Data, passando por cima da RLS, e consegue disparar workflows existentes.
 
 ## Resumo
 
@@ -172,20 +194,21 @@ Um merge recusado pelo GitHub não some: ele fica no git local do Base44. Os tes
 | A proteção da main do Base44 sozinha impede mudança em produção? | Não. Merge feito por agente passa por cima (teste 14). |
 | O GitHub sozinho impede? | Não. Se a proteção do Base44 estiver desligada, a produção muda mesmo com o push recusado (testes 27 e 28). |
 | GitHub + proteção da main impedem um colaborador de mudar código e RLS? | Nos caminhos testados, sim (21 a 26, 29 a 33). O colaborador não consegue desligar nenhuma das duas proteções. |
-| O que continua fora do controle do GitHub? | Secrets (35), publicação de versão antiga do front (36), apagar branches não privadas (37), desligar o sync (34). Dados e workflows não foram verificados. |
+| O que continua fora do controle do GitHub? | Secrets (35), publicação de versão antiga do front (36), apagar branches não privadas (37), desligar o sync (34), ler, editar e apagar qualquer dado pela aba Data (59 a 61), disparar workflow existente (64). Workflows e conectores ficam travados pela proteção da main (62, 63, 65). |
 | O fluxo por PR funciona? | Sim, quando Base44 e repo estão em sincronia: RLS e funções entram sozinhos, sem Publish (45 a 48). |
 | O fluxo por PR é utilizável no dia a dia? | É frágil. Um único "Merge" barrado no Base44 trava o sync (50 e 51). A recuperação é trabalhosa, exige o owner e, se feita sem cuidado, coloca em produção o código barrado (52). Na prática, quem tem acesso de editor precisa ser treinado para nunca clicar "Merge" no Base44. Não há como desligar esse botão. |
 | Branch privada resolve o "apagar branch alheia"? | Dentro do Base44, sim (54 a 56). No GitHub, ela continua visível (57). |
 
 ## Pendências
 
-1. Teste de controle: com o ruleset desligado, o merge pelo Base44 passa? Isso confirma que o erro do teste 21 vem do GitHub. Precisa de alguém com admin no repo.
-2. Ruleset em `b44/*` contra deleção, e se o Base44 continua funcionando com ele. Precisa de alguém com admin no repo.
-3. Ver se o colaborador consegue editar workflows, conectores, configurações do app e dados direto pela aba Data com GitHub + proteção. Não verificado.
-4. Ver se o mesmo vale para "Workspace admin" (só existe nos planos Business) e para um repo de organização no GitHub Team, com exigência de 1 aprovação.
-5. Ver se o front de um PR vai ao ar sem Publish (não verificado; pela documentação, não vai).
-6. Voltar este repo para privado ao final, por causa dos emails nos commits.
+Precisam do dono do repo (a sessão do Claude não pode alterar rulesets):
+
+1. Teste de controle: com o ruleset desligado, o merge pelo Base44 passa? Isso confirma que o erro do teste 21 vem do GitHub.
+2. Ruleset em `b44/*` contra deleção, e se o Base44 continua funcionando com ele.
+3. Voltar este repo para privado ao final, por causa dos emails nos commits.
+
+Fora do alcance deste ambiente: o comportamento de "Workspace admin" (só nos planos Business) e de um repo de organização no GitHub Team com exigência de 1 aprovação.
 
 ## Estado do app ao final
 
-RLS da `TesteRLS` igual à original. Função `ping` com `versao: 'pr-limpo'` (vinda do PR #3). Secret com o valor fictício original. Proteção da main ligada, sync automático ligado, Base44 e repo em sincronia. Ficaram abertas no Base44 as branches `destravar-sync`, `reincidencia` (não mergeada) e `privada-owner`.
+RLS da `TesteRLS` igual à original. Registros iguais aos originais. Função `ping` com `versao: 'pr-limpo'` (vinda do PR #3). Secret com o valor fictício original. Workflow de teste arquivado. Proteção da main ligada, sync automático ligado, Base44 e repo em sincronia. Ficaram abertas no Base44 as branches `destravar-sync`, `reincidencia` (não mergeada) e `privada-owner`. O arquivo `base44/workflows/Teste Colaborador.jsonc` ficou no repo sem efeito (teste 66).
