@@ -22,7 +22,7 @@
       "created_by": "{{user.email}}"
     },
     "delete": {
-      "created_by": "ninguem@exemplo.invalid"
+      "created_by": "{{user.email}}"
     },
     "read": {
       "$or": [
@@ -40,7 +40,7 @@
       ]
     },
     "update": {
-      "created_by": "ninguem@exemplo.invalid"
+      "created_by": "{{user.email}}"
     }
   },
   "type": "object"
